@@ -1,6 +1,9 @@
+import string
 from strings import *
 
 DIGITS = "0123456789" # Create a list of digits so we can detect if a character is a digit
+LETTERS = string.ascii_letters
+MIXED = LETTERS + DIGITS
 
 class Error:
    def __init__(self, begin, end, error_name, details):
@@ -82,6 +85,18 @@ TT_DIV = "DIV"
 TT_LPAREN = "LPAREN"
 TT_RPAREN = "RPAREN"
 TT_EOF = "EOF"
+TT_POW = "POW"
+
+
+# Separate tokens, aside from math these handle stuff like variables
+
+TT_IDENTIFIER = "IDENTIFIER"
+TT_KEYWORD = "KEYWORD"
+TT_EQ = "EQ"
+
+KEYWORDS = [
+   "save"
+]
  
 class Token:
    def __init__(self, type_, value=None, start=None, end=None):
@@ -95,6 +110,9 @@ class Token:
 
       if end:
          self.end = end
+
+   def matches(self, type_, value):
+      return self.type == type_ and self.value == value
 
    def __repr__(self):
       if self.value:
@@ -126,6 +144,8 @@ class Lexer:
             self.advance()
          elif self.current_char in DIGITS:
             tokens.append(self.make_number())
+         elif self.current_char in LETTERS:
+            tokens.append(self.make_identifier())
          elif self.current_char == "+":
             tokens.append(Token(TT_PLUS, start=self.pos))
             self.advance()
@@ -143,6 +163,12 @@ class Lexer:
             self.advance()
          elif self.current_char == ")":
             tokens.append(Token(TT_RPAREN, start=self.pos))
+            self.advance()
+         elif self.current_char == "^":
+            tokens.append(Token(TT_POW, start=self.pos))
+            self.advance()
+         elif self.current_char == "=":
+            tokens.append(Token(TT_EQ, start=self.pos))
             self.advance()
          else:
             start = self.pos.copy()
@@ -174,6 +200,17 @@ class Lexer:
          return Token(TT_INT, int(num_str), start, self.pos)
       else:
          return Token(TT_FLOAT, float(num_str), start, self.pos)
+   
+   def make_identifier(self):
+      identifier_str = ""
+      start = self.pos.copy()
+
+      while self.current_char != None and self.current_char in MIXED + "_":
+         identifier_str += self.current_char
+         self.advance()
+
+      token_type = TT_KEYWORD if identifier_str in KEYWORDS else TT_IDENTIFIER
+      return Token(token_type, identifier_str, start, self.pos)
 
 class NumberNode:
    def __init__(self, token):
@@ -184,7 +221,22 @@ class NumberNode:
 
    def __repr__(self):
       return f"{self.token.value}"
-   
+
+class VarAccessNode:
+   def __init__(self, var_name_token):
+      self.var_name_token = var_name_token
+
+      self.start = self.var_name_token.start
+      self.end = self.var_name_token.end
+
+class VarAssignNode:
+   def __init__(self, var_name_token, value_node):
+      self.var_name_token = var_name_token
+      self.value_node = value_node
+
+      self.start = self.var_name_token.start
+      self.end = self.var_name_token.end
+
 class BinOpNode:
    def __init__(self, left_node, op_token, right_node):
       self.left_node = left_node
@@ -219,12 +271,10 @@ class ParseResult:
       self.node = None
 
    def register(self, result):
-      if isinstance(result, ParseResult):
-         if result.error:
-            self.error = result.error
+      if result.error:
+         self.error = result.error
 
-         return result.node
-      return result
+      return result.node
    
    def success(self, node):
       self.node = node
@@ -252,10 +302,38 @@ class Parser:
       result = self.expression()
 
       if not result.error and self.current_token.type != TT_EOF:
-         return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, "Expected \"+\", \"-\", \"*\" or \"/\""))
+         return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, "Expected \"+\", \"-\", \"*\", \"/\" or \"^\""))
       
       return result
    
+   def atom(self):
+      result = ParseResult()
+      token = self.current_token
+
+      if token.type in (TT_INT, TT_FLOAT):
+         result.register(self.advance())
+         return result.success(NumberNode(token))
+      elif token.type == TT_IDENTIFIER:
+         result.register(self.advance())
+         return result.success(VarAccessNode(token))
+      elif token.type == TT_LPAREN:
+         result.register(self.advance())
+         expression = result.register(self.expression())
+
+         if result.error:
+            return result
+         
+         if self.current_token.type == TT_RPAREN:
+            result.register(self.advance())
+            return result.success(expression)
+         else:
+            return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, f"Expected \")\", got {self.current_token}"))
+         
+      return result.failure(InvalidSyntax(token.start, token.end, "Expected Integer, Float, \"+\", \"-\" or \"(\""))
+
+   def power(self):
+      return self.binary_operation(self.atom, (TT_POW, ), self.factor)
+
    def factor(self):
       # Factoring and managing all sorts of operations
       result = ParseResult()
@@ -269,31 +347,41 @@ class Parser:
             return result
          
          return result.success(UnaryOpNode(token, factor))
-      elif token.type in (TT_INT, TT_FLOAT):
+
+      return self.power()
+   
+   def term(self):
+      return self.binary_operation(self.factor, (TT_MUL, TT_DIV))
+   
+   def expression(self):
+      result = ParseResult()
+
+      if self.current_token.matches(TT_KEYWORD, "save"):
          result.register(self.advance())
-         return result.success(NumberNode(token))
-      elif token.type == TT_LPAREN:
+
+         if self.current_token.type != TT_IDENTIFIER:
+            return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, "Expected Identifier"))
+         
+         var_name = self.current_token
+         result.register(self.advance())
+
+         if self.current_token.type != TT_EQ:
+            return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, "Expected \"as\""))
+         
          result.register(self.advance())
          expression = result.register(self.expression())
 
          if result.error:
             return result
          
-         if self.current_token.type == TT_RPAREN:
-            result.register(self.advance())
-            return result.success(expression)
-         else:
-            return result.failure(InvalidSyntax(self.current_token.start, self.current_token.end, f"Expected \")\", got {self.current_token}"))
+         return result.success(VarAssignNode(var_name, expression))
 
-      return result.failure(InvalidSyntax(token.start, token.end, f"Expected integer or float, got {self.current_token}"))
-   
-   def term(self):
-      return self.binary_operation(self.factor, (TT_MUL, TT_DIV))
-   
-   def expression(self):
       return self.binary_operation(self.term, (TT_PLUS, TT_MINUS))
    
-   def binary_operation(self, function, ops):
+   def binary_operation(self, function, ops, alternative=None):
+      if alternative == None:
+         alternative = function
+
       result = ParseResult()
       left = result.register(function())
 
@@ -304,7 +392,7 @@ class Parser:
          op_token = self.current_token
 
          result.register(self.advance())
-         right = result.register(function())
+         right = result.register(alternative())
 
          if result.error:
             return result
@@ -348,6 +436,10 @@ class Number:
          if other.value == 0:
             return None, RuntimeError(other.start, other.end, "Illegal division, cannot divide by 0", self.context)
          return Number(self.value / other.value).set_context(self.context), None
+      
+   def pow_by(self, other):
+      if isinstance(other, Number):
+         return Number(self.value ** other.value).set_context(self.context), None
    
    def __repr__(self):
       return str(self.value)
@@ -359,6 +451,26 @@ class Context:
       self.display_name = display_name
       self.parent = parent
       self.parent_entry = parent_entry
+      self.symbol_table = None
+
+class SymbolTable:
+   def __init__(self) -> None:
+      self.symbols = {}
+      self.parent = None
+
+   def get(self, name):
+      value = self.symbols.get(name, None)
+
+      if value == None and self.parent:
+         return self.parent.get(name)
+      
+      return value
+   
+   def set(self, name, value):
+      self.symbols[name] = value
+
+   def remove(self, name):
+      del self.symbols[name]
 
 ## Interpreter
 
@@ -374,6 +486,27 @@ class Interpreter:
 
    def visit_NumberNode(self, node, context):
       return RuntimeResult().success(Number(node.token.value).set_context(context).set_pos(node.start, node.end))
+
+   def visit_VarAccessNode(self, node, context):
+      result = RuntimeResult()
+      var_name = node.var_name_token.value
+      value = context.symbol_table.get(var_name)
+
+      if not value:
+         return result.failure(RuntimeError(node.start, node.end, f"\"{var_name}\" undefined", context))
+      
+      return result.success(value)
+   
+   def visit_VarAssignNode(self, node, context):
+      result = RuntimeResult()
+      var_name = node.var_name_token.value
+      value = result.register(self.visit(node.value_node, context))
+
+      if result.error:
+         return result
+      
+      context.symbol_table.set(var_name, value)
+      return result.success(value)
 
    def visit_BinOpNode(self, node, context):
       res = RuntimeResult()
@@ -394,6 +527,8 @@ class Interpreter:
          result, error_code = left.mul_by(right)
       elif node.op_token.type == TT_DIV:
          result, error_code = left.div_by(right)
+      elif node.op_token.type == TT_POW:
+         result, error_code = left.pow_by(right)
       else:
          raise Exception(f"Invalid operator: {node.op_token.type}")
       
@@ -419,6 +554,9 @@ class Interpreter:
 
 ## Run functions
 
+global_symbol_table = SymbolTable()
+global_symbol_table.set("null", Number(0))
+
 def run(name, text):
    lexer = Lexer(name, text)
    tokens, error_code = lexer.make_tokens()
@@ -434,6 +572,7 @@ def run(name, text):
    
    interpreter = Interpreter()
    context = Context("<Program>")
+   context.symbol_table = global_symbol_table
    result = interpreter.visit(ast.node, context)
 
    return result.value, result.error
