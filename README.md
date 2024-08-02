@@ -8,7 +8,7 @@ Python-based programming language designed for basic use
 
 ### Features
 * **Math**: Addition, Subtracting, Division & Multiplication
-* * Includes [PEMDAS](https://en.wikipedia.org/wiki/Order_of_operations) (Order of Operations)
+* * Includes **[PEMDAS](https://en.wikipedia.org/wiki/Order_of_operations)** (Order of Operations)
   * Includes Math for Variables: (Example) -> `variable_name ^ your_var` = 1
 
 * **Variables**: Save Information on a Key
