@@ -271,10 +271,12 @@ class ParseResult:
       self.node = None
 
    def register(self, result):
-      if result.error:
-         self.error = result.error
+      if isinstance(result, ParseResult):
+         if result.error:
+            self.error = result.error
 
-      return result.node
+         return result.node
+      return result
    
    def success(self, node):
       self.node = node
