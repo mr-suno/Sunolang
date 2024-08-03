@@ -1,0 +1,4 @@
+// Locally save our variable:
+save local as "test"
+
+print("this", "is a " + local)
