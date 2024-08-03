@@ -1,20 +1,67 @@
 # Sunolang 🐍
-Python-based programming language designed for basic use
+Simple & efficient Python-based programming language designed for beginners & horrible coders like myself.
 
-![Source Image](https://github.com/user-attachments/assets/089c2125-6608-4ec8-8209-036abc09d3a8)
+## Guides 🧾
+### Table of Contents
+1. [Installation Guide](https://github.com/mr-suno/Sunolang/edit/main/README.md#installation)
+2. [Features](https://github.com/mr-suno/Sunolang/edit/main/README.md#features-)
+3. [Newest Releases](https://github.com/mr-suno/Sunolang/edit/main/README.md#recent-updates-)
 
-### Guides 📖
-1. Feel free to use **[this guide](https://www.youtube.com/watch?v=Eythq9848Fg&list=PLZQftyCk7_SdoVexSmwy_tBgs7P0b97yD)** I used for learning
+### Installation
+> [!IMPORTANT]
+> Sunolang is **only available** in a CLI, like **VSCode** or **Windows Terminal**.
+> <br>**.su** extension is OPTIONAL in CLI after file name
 
-### Features
-* **Math**: Addition, Subtracting, Division & Multiplication
-* * Includes **[PEMDAS](https://en.wikipedia.org/wiki/Order_of_operations)** (Order of Operations)
-  * Includes Math for Variables: (Example) -> `variable_name ^ your_var` = 1
+1. Navigate [releases](), and download **Source.zip**
+2. Unzip **Source.zip**, and run **Download.bat**
+3. In any directory, create a file with the **.su** extension
+4. In your CLI, navigate to that directory and type
+```bash
+su your-file
+```
+* If properly unzipped, Sunolang will be installed on your machine.
 
-* **Variables**: Save Information on a Key
-* * `save variable_name = 1`
-  * `save your_var = 2`
- 
-### Newest Release 📃
-1. Added powering numbers! (Example: 1 ^ 2)
-2. Added local variables!
+## Features 🔖
+### Math Operations
+* **Basic Operations**: Adding, Subtracting, Division & Multiplication
+* **Order of Operations**: Following [PEMDAS](https://en.wikipedia.org/wiki/Order_of_operations)
+* **Math & Variables**: Perform arithmetic operations via variable
+```
+save number as 30
+print(number / 2) // Feedback: 15
+```
+
+### Variables
+> [!TIP]
+> After **save**, you can rename your variable to anything you desire
+
+* **Storage**: Save & Retrieve information using local variables
+* **Syntax**:
+```
+save number as 15 // Change to your age!
+save string as "hey!"
+
+print(string + "i'm" + number + "years old.")
+```
+
+## Recent Updates 🚀
+### Printing
+* **Concatenation**: Link multiple strings OR numbers together
+```
+save string as "concatenated"
+
+/* It's recommended you use "," if your string needs
+   a space after it */
+
+print("boom", string) // Feedback: "boom concatenation"
+print("easy" + string) // Feedback: "easyconcatenation"
+```
+
+### Comments
+* **Single & Multiline**: Useful for explaining code, the script ignores comments entirely
+```
+/* Use this type of comment
+   for multiple lines! */
+
+print("hey!") // ..and use me for a single line
+```
