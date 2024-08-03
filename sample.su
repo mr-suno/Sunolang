@@ -7,10 +7,10 @@
 save age as 15
 save name as "Suno"
 
-print("Hey! I'm" + name + "and I'm" + age "years old.") // Feedback: "Hey! I'm Suno and I'm 15 years old."
+print("Hello, I'm", name, "and I'm", age, "years old.") // Feedback: "Hey! I'm Suno and I'm 15 years old."
 
 
-// Let's use the other type of concatenation for example:
+// Another example is simply,
 
 save half as "lang"
 
