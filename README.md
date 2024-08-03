@@ -3,9 +3,9 @@ Simple & efficient Python-based programming language designed for beginners & ho
 
 ## Guides 🧾
 ### Table of Contents
-1. [Installation Guide](https://github.com/mr-suno/Sunolang/edit/main/README.md#installation)
-2. [Features](https://github.com/mr-suno/Sunolang/edit/main/README.md#features-)
-3. [Newest Releases](https://github.com/mr-suno/Sunolang/edit/main/README.md#recent-updates-)
+1. [Installation Guide](https://github.com/mr-suno/Sunolang#installation)
+2. [Features](https://github.com/mr-suno/Sunolang#features-)
+3. [Newest Releases](https://github.com/mr-suno/Sunolang#recent-updates-)
 
 ### Installation
 > [!IMPORTANT]
