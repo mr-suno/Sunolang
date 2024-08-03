@@ -29,7 +29,7 @@ su your-file
 ```
 save number as 30
 
-print(number / 2) // Feedback: 15
+print(number + 2 + 2) // Feedback: 15
 ```
 
 ### Variables
