@@ -28,6 +28,7 @@ su your-file
 * **Math & Variables**: Perform arithmetic operations via variable
 ```
 save number as 30
+
 print(number / 2) // Feedback: 15
 ```
 
