@@ -1,4 +1,17 @@
-// Locally save our variable:
-save local as "test"
+// Hey!
+/* Sunolang is a VERY beginner-friendly
+   and easy-use language. */
 
-print("this", "is a " + local)
+// Log our age & name:
+
+save age as 15
+save name as "Suno"
+
+print("Hey! I'm" + name + "and I'm" + age "years old.") // Feedback: "Hey! I'm Suno and I'm 15 years old."
+
+
+// Let's use the other type of concatenation for example:
+
+save half as "lang"
+
+print("I <3 Suno", half) // Feedback: "I <3 Sunolang"
